@@ -1,0 +1,27 @@
+ARG     FROM_TAG
+FROM    ${FROM_TAG}
+
+ARG     PYTHON_VERSION
+ARG     SPARK_VERSION
+
+ARG     MODULE_NAME=ups
+
+USER    root
+EXPOSE  4040/tcp
+# EXPOSE  7077/tcp
+# EXPOSE  18080/tcp
+RUN     update-alternatives --install /usr/bin/python python /usr/bin/python${PYTHON_VERSION} 999 \
+        && update-alternatives --install /usr/bin/python3 python3 /usr/bin/python${PYTHON_VERSION} 999
+
+USER    ups
+WORKDIR /home/ups
+
+ENV     SPARK_HOME=/opt/spark
+ENV     PATH=${SPARK_HOME}/bin:$PATH
+
+COPY    ./dist/${MODULE_NAME}-*.whl ./
+
+RUN     export LC_ALL=C.UTF-8 \
+        && python -m pip install --no-index --find-links=./ ${MODULE_NAME} \
+        && rm -f ${MODULE_NAME}-*.whl
+        

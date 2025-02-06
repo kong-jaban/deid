@@ -1,0 +1,11 @@
+ARG     FROM_TAG
+FROM    ${FROM_TAG}
+
+ARG     PYTHON_VERSION
+
+# ENV     LC_ALL=C.UTF-8
+USER    root
+
+RUN	    ln -fs /usr/share/zoneinfo/Asia/Seoul /etc/localtime \
+        && microdnf install -y python${PYTHON_VERSION} \
+        && python${PYTHON_VERSION} -m ensurepip

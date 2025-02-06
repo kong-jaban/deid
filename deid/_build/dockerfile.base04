@@ -1,0 +1,59 @@
+ARG     FROM_TAG
+FROM    ${FROM_TAG}
+
+ARG     GID
+ARG     UID
+ARG     PYTHON_VERSION
+
+ARG     SPARK_CONF=/opt/spark/conf/spark-defaults.conf
+ARG     SPARK_ENV=/opt/spark/conf/spark-env.sh
+ARG     MYHOME=/home/ups
+ARG     MYDATA=${MYHOME}/data
+ARG     PYTHON=python${PYTHON_VERSION}
+
+USER    root
+
+RUN     export LC_ALL=C.UTF-8 \
+        \
+        && echo "export HADOOP_HOME=/opt/hadoop" >> ${SPARK_ENV} \
+        && echo "export LD_LIBRARY_PATH=\$HADOOP_HOME/lib/native:\$LD_LIBRARY_PATH" >> ${SPARK_ENV} \
+        && echo "export PYSPARK_PYTHON=python3.11" >> ${SPARK_ENV} \
+        \
+        && echo "SPARK_LOCAL_IP=127.0.0.1" >> ${SPARK_ENV} \
+        && echo "SPARK_LOCAL_DIRS=${MYDATA}/tmp" >> ${SPARK_ENV} \
+        && echo "SPARK_LOG_DIR=${MYDATA}/logs" >> ${SPARK_ENV} \
+        \
+        && echo "spark.driver.memory                   56g" >> ${SPARK_CONF} \
+        && echo "spark.driver.maxResultSize            16g" >> ${SPARK_CONF} \
+        && echo "spark.sql.autoBroadcastJoinThreshold  -1" >> ${SPARK_CONF} \
+        && echo "spark.sql.caseSensitive               false" >> ${SPARK_CONF} \
+        && echo "spark.sql.columnNameOfCorruptRecord   _corrupt_record" >> ${SPARK_CONF} \
+        && echo "spark.sql.debug.maxToStringFields     2000" >> ${SPARK_CONF} \
+        && echo "spark.warehouse.dir                   ${MYDATA}/tmp" >> ${SPARK_CONF} \
+        && echo "spark.eventLog.enabled                true" >> ${SPARK_CONF} \
+        && echo "spark.eventLog.dir                    ${MYDATA}/logs" >> ${SPARK_CONF} \
+        && echo "spark.history.fs.logDirectory         ${MYDATA}/logs" >> ${SPARK_CONF} \
+        && echo "spark.history.provider                org.apache.spark.deploy.history.FsHistoryProvider" >> ${SPARK_CONF} \
+        && echo "spark.history.ui.port                 18080" >> ${SPARK_CONF} \
+        && echo "spark.sql.parquet.int96RebaseModeInWrite CORRECTED" >> ${SPARK_CONF} \
+        \
+        && microdnf install -y shadow-utils \
+        && microdnf install -y procps-ng \
+        && groupadd --gid ${GID} ups \
+        && adduser --uid ${UID} --gid ${GID} --create-home --home-dir ${MYHOME} --shell /bin/bash ups \
+        && echo 'ups ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
+
+USER    ups
+WORKDIR /home/ups
+
+RUN     export LC_ALL=C.UTF-8 \
+        && ${PYTHON} -m pip install --upgrade pip \
+        && ${PYTHON} -m pip install --upgrade findspark \
+        && ${PYTHON} -m pip install --upgrade pycryptodomex \
+        && ${PYTHON} -m pip install --upgrade pyyaml \
+        && ${PYTHON} -m pip install --upgrade openpyxl \
+        && ${PYTHON} -m pip install --upgrade pandas \
+        && ${PYTHON} -m pip install --upgrade dask \
+        && ${PYTHON} -m pip install --upgrade loky \
+        && ${PYTHON} -m pip install --upgrade chardet
+        

@@ -1,0 +1,28 @@
+ARG     FROM_TAG
+FROM    ${FROM_TAG}
+
+ARG     HADOOP_VERSION
+ARG     HADOOP_MAJOR_VERSION
+ARG     SPARK_VERSION
+
+ARG     HADOOP_STEM=hadoop-${HADOOP_VERSION}
+ARG     HADOOP_FILE=${HADOOP_STEM}.tar.gz
+ARG     HADOOP_URL=https://dlcdn.apache.org/hadoop/common/${HADOOP_STEM}/${HADOOP_FILE}
+ARG     SPARK_STEM=spark-${SPARK_VERSION}
+ARG     SPARK_FILE=${SPARK_STEM}-bin-hadoop${HADOOP_MAJOR_VERSION}.tgz
+ARG     SPARK_URL=https://dlcdn.apache.org/spark/${SPARK_STEM}/${SPARK_FILE}
+
+# ENV     LC_ALL=C.UTF-8
+USER    root
+WORKDIR /opt
+
+RUN     microdnf install -y tar \
+        && microdnf install -y gzip \
+        && curl ${HADOOP_URL} -o ${HADOOP_FILE} \
+        && tar -xzf ${HADOOP_FILE} ${HADOOP_STEM}/lib/native \
+        && rm ${HADOOP_FILE} \
+        \
+        && curl ${SPARK_URL} | tar -xz \
+        && ln -s /opt/${HADOOP_STEM} /opt/hadoop \
+        && ln -s /opt/${SPARK_STEM}-bin-hadoop${HADOOP_MAJOR_VERSION} /opt/spark
+        

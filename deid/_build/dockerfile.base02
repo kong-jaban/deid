@@ -1,0 +1,9 @@
+ARG     FROM_TAG
+FROM    ${FROM_TAG}
+
+ARG     JAVA_VERSION
+
+# ENV     LC_ALL=C.UTF-8
+USER    root
+
+RUN	    microdnf install -y java-${JAVA_VERSION}-openjdk
